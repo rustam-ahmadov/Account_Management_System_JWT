@@ -2,25 +2,21 @@ package com.example.acc_mgmt_sys.controller;
 
 
 import com.example.acc_mgmt_sys.dto.JwtRequest;
-import com.example.acc_mgmt_sys.dto.JwtResponse;
+import com.example.acc_mgmt_sys.dto.UserDto;
 import com.example.acc_mgmt_sys.entity.User;
+import com.example.acc_mgmt_sys.entity.UsersRoles;
 import com.example.acc_mgmt_sys.security.CustomUserDetailsService;
 import com.example.acc_mgmt_sys.security.JwtTokenProvider;
+import com.example.acc_mgmt_sys.service.UserRoleService;
 import com.example.acc_mgmt_sys.service.UserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.authentication.DisabledException;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.Optional;
 
 @RestController
 @CrossOrigin()
 public class JwtAuthenticationController {
-
+    private final UserRoleService userRoleService;
     private final AuthenticationManager authenticationManager;
 
     private final JwtTokenProvider jwtTokenProvider;
@@ -29,7 +25,8 @@ public class JwtAuthenticationController {
 
     private final CustomUserDetailsService customUserDetailsService;
 
-    public JwtAuthenticationController(UserService userService, AuthenticationManager authenticationManager, JwtTokenProvider tokenProvider, CustomUserDetailsService customUserDetailsService) {
+    public JwtAuthenticationController(UserRoleService userRoleService, UserService userService, AuthenticationManager authenticationManager, JwtTokenProvider tokenProvider, CustomUserDetailsService customUserDetailsService) {
+        this.userRoleService = userRoleService;
         this.authenticationManager = authenticationManager;
         this.jwtTokenProvider = tokenProvider;
         this.customUserDetailsService = customUserDetailsService;
@@ -49,15 +46,28 @@ public class JwtAuthenticationController {
     }
 
 
-    @RequestMapping(value = "/register", method = RequestMethod.POST)
-    public ResponseEntity<?> saveUser(@RequestBody User user) throws Exception {
-        String response = "User has been added in DB successfully";
-        try {
-            userService.addUser(user);
-        } catch (Exception e) {
-            response = "There is already such user in DB";
+    @PostMapping(value = "/register")
+    public ResponseEntity<?> saveUser(@RequestBody UserDto newUser) throws Exception {
+
+        User user = userService.getUser(newUser.getUsername());
+
+        if (user != null) {
+            return ResponseEntity.ok("There is already such user in DB");
         }
-        return ResponseEntity.ok().body(response);
+
+        user = new User();
+        user.setUsername(newUser.getUsername());
+        user.setPassword(newUser.getPassword());
+        Long id = userService.addUser(user).getId();
+
+        for (Long role : newUser.getRoles()) {
+            UsersRoles usersRole = new UsersRoles();
+            usersRole.setUser_id(user.getId());
+            usersRole.setRoles_id(role);
+            userRoleService.addRoleToUser(usersRole);
+        }
+
+        return ResponseEntity.ok("User was added successfully");
     }
 
 }
