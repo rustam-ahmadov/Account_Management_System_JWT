@@ -54,11 +54,13 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     @Override
     protected void configure(HttpSecurity httpSecurity) throws Exception {
 
-
+        httpSecurity.csrf().disable();
+        httpSecurity.headers().frameOptions().disable();
         // We don't need CSRF for this example
-        httpSecurity.csrf().disable()
                 // dont authenticate this particular requests
-                .authorizeRequests().antMatchers("/authenticate", "/register","/add/role").permitAll();
+                httpSecurity.
+                        authorizeRequests().antMatchers("/authenticate", "/register","/add/role","/h2-console/**")
+                .permitAll();
 
         httpSecurity.authorizeRequests().antMatchers("/api/users/").hasAuthority("ROLE_ADMIN");
         httpSecurity.authorizeRequests().antMatchers("/api/user/add").hasAuthority("ROLE_ADMIN");

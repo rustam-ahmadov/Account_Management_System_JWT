@@ -1,5 +1,6 @@
 package com.example.acc_mgmt_sys.service;
 
+import com.example.acc_mgmt_sys.entity.Account;
 import com.example.acc_mgmt_sys.entity.User;
 import com.example.acc_mgmt_sys.repo.UserRepository;
 import org.springframework.stereotype.Service;
@@ -32,4 +33,23 @@ public class UserServiceImpl implements UserService {
     public List<User> getAllUsers() {
         return ((List<User>) userRepository.findAll());
     }
+
+    @Override
+    public List<Account> getUserAccount(Long userId) {
+        Optional<User> user = userRepository.findById(userId);
+        if (user.isPresent()) {
+            return user.get().getAccounts();
+        }
+        return null;
+    }
+
+    @Override
+    public void addUserAccount(Long userId, Account account) {
+        Optional<User> user = userRepository.findById(userId);
+        if (user.isPresent()) {
+            user.get().setAccount(account);
+        }
+    }
+
+
 }

@@ -1,5 +1,6 @@
 package com.example.acc_mgmt_sys.controller;
 
+import com.example.acc_mgmt_sys.dto.AccountDto;
 import com.example.acc_mgmt_sys.dto.UserDto;
 import com.example.acc_mgmt_sys.entity.Account;
 import com.example.acc_mgmt_sys.entity.Role;
@@ -40,14 +41,14 @@ public class ApplicationController {
     }
 
     @GetMapping(path = "{username}/accounts")
-    public ResponseEntity<List<Account>> getUserAccounts(@PathVariable String username) {
+    public ResponseEntity<?> getUserAccounts(@PathVariable String username) {
 
-        List<Account> accounts = accountService.getAccountsByUserName(username);
+        User user  = userService.getUser(username);
 
-        if (accounts != null)
-            return ResponseEntity.ok(accounts);
+        if (user != null)
+            return ResponseEntity.ok(user.getAccounts());
 
-        return ResponseEntity.ok(null);
+        return ResponseEntity.ok("There is no such user in DB");
     }
 
     @GetMapping(path = "account/{accountNumber}")
@@ -75,13 +76,22 @@ public class ApplicationController {
     }
 
     @PostMapping(path = "/add/account/")
-    public ResponseEntity<?> addUserAccount(@RequestBody Account newAccount) {
-        Account account = accountService.getAccountByNumber(newAccount.getNumber());
+    public ResponseEntity<?> addUserAccount(@RequestBody AccountDto accountDto) {
+        Account account = accountService.getAccountByNumber(accountDto.getNumber());
+        User user = userService.getUser(accountDto.getUsername());
+
         if (account != null) {
-            return ResponseEntity.ok("There is already such account in DB");
+            return ResponseEntity.ok("There is already account with same number in db");
         }
-        accountService.addAccount(newAccount);
-        return ResponseEntity.ok("Account has been added successfully");
+
+        if(user ==null){
+            return ResponseEntity.ok("There is no user with such name in DB");
+        }
+
+        account = new Account(accountDto.getNumber(), accountDto.getBalance(),user);
+        accountService.addAccount(account);
+
+        return ResponseEntity.ok("Account has been successfully added to user " + user.getUsername());
     }
 
     @PostMapping(path = "user/add")

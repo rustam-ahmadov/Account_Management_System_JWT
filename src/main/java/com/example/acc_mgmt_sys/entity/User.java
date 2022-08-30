@@ -24,8 +24,8 @@ public class User {
     @ManyToMany(fetch = FetchType.EAGER)
     private Collection<Role> roles = new ArrayList<>();
 
-    @OneToMany
-    private List<Account> accounts = new ArrayList<>();
+    @OneToMany(mappedBy ="user")
+    private List<Account> accounts;
 
     //region Constructor , Getters and Setters
     public User() {
@@ -133,6 +133,10 @@ public class User {
 
     public void setDob(LocalDate dob) {
         this.dob = dob;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
     }
     //endregion
 }
